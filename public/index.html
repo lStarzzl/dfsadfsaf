@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <title>Horizon Key System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -269,7 +270,9 @@
         async function loadKeys() {
             try {
                 showLoading(true);
-                const response = await fetch(`${API_BASE_URL}/api/keys`);
+                const response = await fetch(`${API_BASE_URL}/api/keys`, {
+                    cache: 'no-store'
+                });
                 if (!response.ok) {
                     const error = await response.text();
                     throw new Error(error || 'Failed to fetch keys');
@@ -290,7 +293,8 @@
                 const response = await fetch(`${API_BASE_URL}/api/keys`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(newKey)
+                    body: JSON.stringify(newKey),
+                    cache: 'no-store'
                 });
                 
                 if (!response.ok) {
@@ -315,7 +319,8 @@
                 const response = await fetch(`${API_BASE_URL}/api/keys/${index}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(updatedKey)
+                    body: JSON.stringify(updatedKey),
+                    cache: 'no-store'
                 });
                 
                 if (!response.ok) {
@@ -338,7 +343,8 @@
             try {
                 showLoading(true);
                 const response = await fetch(`${API_BASE_URL}/api/keys/${index}`, {
-                    method: 'DELETE'
+                    method: 'DELETE',
+                    cache: 'no-store'
                 });
                 
                 if (!response.ok) {
