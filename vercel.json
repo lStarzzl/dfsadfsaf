@@ -1,10 +1,23 @@
 {
   "version": 2,
   "builds": [
-    { "src": "server.js", "use": "@vercel/node" }
+    {
+      "src": "api/keys.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "server.js",
+      "use": "@vercel/node"
+    }
   ],
   "routes": [
-    { "src": "/api/keys", "dest": "server.js" },
-    { "src": "/(.*)", "dest": "server.js" }
+    {
+      "src": "/api/keys",
+      "dest": "api/keys.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "server.js"
+    }
   ]
 }
