@@ -18,7 +18,6 @@
             overflow-x: hidden;
         }
 
-        /* --- Animated Particle Background --- */
         #particle-background {
             position: fixed;
             top: 0;
@@ -39,7 +38,6 @@
             to { background-position: 10000px 5000px; }
         }
 
-        /* --- Glassmorphism & Glow Effects --- */
         .glass-card {
             background: rgba(10, 13, 26, 0.5);
             backdrop-filter: blur(12px);
@@ -55,7 +53,6 @@
             transform: translateY(-5px);
         }
 
-        /* --- Button Styles --- */
         .action-button {
             background: linear-gradient(90deg, #ffc0cb, #ffb6c1);
             box-shadow: 0 0 25px rgba(255, 192, 203, 0.5);
@@ -92,7 +89,6 @@
             transform: translateY(-2px);
         }
 
-        /* --- Scroll Animations --- */
         .fade-in-section {
             opacity: 0;
             transform: translateY(20px);
@@ -110,7 +106,6 @@
             }
         }
 
-        /* --- Glitch Effect on Title --- */
         .glitch-text {
             position: relative;
         }
@@ -144,7 +139,6 @@
             10%, 30%, 50%, 70%, 90% { clip-path: inset(80% 0 5% 0); }
         }
 
-        /* --- Error Message Styling --- */
         #errorMessage {
             display: none;
             position: absolute;
@@ -156,7 +150,6 @@
             text-align: center;
         }
         
-        /* Raw Content Styling to match the image */
         #raw {
             display: none;
             position: fixed;
@@ -260,93 +253,134 @@
     </footer>
 
     <script>
-        // Hardcoded admin password (replace with secure authentication in production)
-        const ADMIN_PASSWORD = "admin123";
+        // ======================
+        // UPDATED CORE CONFIGURATION
+        // ======================
+        const API_BASE_URL = window.location.origin; // Automatically adapts to Vercel URL
+        const ADMIN_PASSWORD = "admin123"; // Change this in production!
         let keys = [];
         let editingIndex = null;
 
-        // Fetch keys from server
+        // ======================
+        // UPDATED API FUNCTIONS
+        // ======================
+        
+        // Fixed: Fetch keys from server
         async function loadKeys() {
             try {
-                const response = await fetch('http://localhost:3000/api/keys');
-                if (!response.ok) throw new Error('Failed to fetch keys');
+                showLoading(true);
+                const response = await fetch(`${API_BASE_URL}/api/keys`);
+                if (!response.ok) {
+                    const error = await response.text();
+                    throw new Error(error || 'Failed to fetch keys');
+                }
                 keys = await response.json();
                 renderKeyList();
             } catch (err) {
-                console.error('Error fetching keys:', err);
-                alert('Failed to load keys. Please try again.');
+                showError(`Failed to load keys: ${err.message}`);
+            } finally {
+                showLoading(false);
             }
         }
 
-        // Save a new key
+        // Fixed: Save new key
         async function saveKey(newKey) {
             try {
-                const response = await fetch('http://localhost:3000/api/keys', {
+                showLoading(true);
+                const response = await fetch(`${API_BASE_URL}/api/keys`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(newKey),
+                    body: JSON.stringify(newKey)
                 });
-                const result = await response.json();
-                if (result.success) {
-                    await loadKeys();
-                } else {
-                    throw new Error('Failed to save key');
+                
+                if (!response.ok) {
+                    const error = await response.text();
+                    throw new Error(error || 'Failed to save key');
                 }
+                
+                await loadKeys();
+                return await response.json();
             } catch (err) {
-                console.error('Error saving key:', err);
-                alert('Failed to save key. Please try again.');
+                showError(`Failed to save key: ${err.message}`);
+                throw err;
+            } finally {
+                showLoading(false);
             }
         }
 
-        // Update a key
+        // Fixed: Update key
         async function updateKey(index, updatedKey) {
             try {
-                const response = await fetch(`http://localhost:3000/api/keys/${index}`, {
+                showLoading(true);
+                const response = await fetch(`${API_BASE_URL}/api/keys/${index}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(updatedKey),
+                    body: JSON.stringify(updatedKey)
                 });
-                const result = await response.json();
-                if (result.success) {
-                    await loadKeys();
-                } else {
-                    throw new Error('Failed to update key');
+                
+                if (!response.ok) {
+                    const error = await response.text();
+                    throw new Error(error || 'Failed to update key');
                 }
+                
+                await loadKeys();
+                return await response.json();
             } catch (err) {
-                console.error('Error updating key:', err);
-                alert('Failed to update key. Please try again.');
+                showError(`Failed to update key: ${err.message}`);
+                throw err;
+            } finally {
+                showLoading(false);
             }
         }
 
-        // Delete a key
+        // Fixed: Delete key
         async function deleteKey(index) {
             try {
-                const response = await fetch(`http://localhost:3000/api/keys/${index}`, {
-                    method: 'DELETE',
+                showLoading(true);
+                const response = await fetch(`${API_BASE_URL}/api/keys/${index}`, {
+                    method: 'DELETE'
                 });
-                const result = await response.json();
-                if (result.success) {
-                    await loadKeys();
-                } else {
-                    throw new Error('Failed to delete key');
+                
+                if (!response.ok) {
+                    const error = await response.text();
+                    throw new Error(error || 'Failed to delete key');
                 }
+                
+                await loadKeys();
+                return await response.json();
             } catch (err) {
-                console.error('Error deleting key:', err);
-                alert('Failed to delete key. Please try again.');
+                showError(`Failed to delete key: ${err.message}`);
+                throw err;
+            } finally {
+                showLoading(false);
             }
         }
 
-        // Generate random key (alphanumeric, 16 characters)
+        // ======================
+        // HELPER FUNCTIONS
+        // ======================
+        function showError(message) {
+            const errorEl = document.getElementById("errorMessage");
+            errorEl.textContent = message;
+            errorEl.style.display = "block";
+            setTimeout(() => errorEl.style.display = "none", 5000);
+        }
+
+        function showLoading(loading) {
+            document.getElementById("submitKey").disabled = loading;
+            document.getElementById("submitPassword").disabled = loading;
+            // Add loading spinners if desired
+        }
+
         function generateKey() {
-            const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-            let key = "";
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let result = '';
             for (let i = 0; i < 16; i++) {
-                key += characters.charAt(Math.floor(Math.random() * characters.length));
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
             }
-            return key;
+            return result;
         }
 
-        // Format expiration date
         function getExpirationDate(days, specificDate) {
             if (specificDate) {
                 return new Date(specificDate).toLocaleString();
@@ -356,27 +390,17 @@
             return date.toLocaleString();
         }
 
-        // Update raw content
-        async function updateRawContent() {
-            const rawContent = document.getElementById("rawContent");
-            let rawText = "";
-            keys.forEach(keyObj => {
-                rawText += `${keyObj.keyValue}\n`;
-            });
-            rawContent.textContent = rawText.trim();
-        }
-
-        // Render key list
         function renderKeyList() {
             const keyList = document.getElementById("keyList");
             keyList.innerHTML = "";
+            
             keys.forEach((keyObj, index) => {
                 const keyElement = document.createElement("div");
                 keyElement.className = "glass-card p-6 rounded-lg mb-4 flex justify-between items-center";
                 keyElement.innerHTML = `
                     <div>
                         <p class="text-gray-300 font-mono">Key: ${keyObj.keyValue}</p>
-                        <p class="text-gray-300 font-mono">Expires: <span id="expiration-${index}">${keyObj.expiration}</span></p>
+                        <p class="text-gray-300 font-mono">Expires: ${keyObj.expiration}</p>
                     </div>
                     <div class="flex space-x-2">
                         <button class="action-button text-white font-bold text-sm uppercase tracking-wider px-4 py-2 rounded-lg edit-key" data-index="${index}">Edit</button>
@@ -409,124 +433,89 @@
                     }
                 });
             });
-
-            updateRawContent();
         }
 
-        // Handle password submission
-        function handlePasswordSubmit() {
-            const password = document.getElementById("passwordInput").value;
-            const errorMessage = document.getElementById("errorMessage");
-            const homeSection = document.getElementById("home");
-            const keyGeneratorSection = document.getElementById("keyGenerator");
-            const createKeyButton = document.getElementById("createKeyButton");
-            const rawLink = document.getElementById("rawLink");
-
-            if (password === ADMIN_PASSWORD) {
-                errorMessage.style.display = "none";
-                homeSection.classList.add("hidden");
-                keyGeneratorSection.classList.remove("hidden");
-                createKeyButton.classList.remove("hidden");
-                rawLink.classList.remove("hidden");
-                loadKeys();
-            } else {
-                errorMessage.style.display = "block";
-            }
-        }
-
-        // Password submission via button
+        // ======================
+        // EVENT LISTENERS
+        // ======================
         document.getElementById("submitPassword").addEventListener("click", handlePasswordSubmit);
-
-        // Password submission via Enter key
-        document.getElementById("passwordInput").addEventListener("keypress", (event) => {
-            if (event.key === "Enter") {
-                handlePasswordSubmit();
-            }
+        document.getElementById("passwordInput").addEventListener("keypress", (e) => {
+            if (e.key === "Enter") handlePasswordSubmit();
         });
 
-        // Toggle key creation form
         document.getElementById("createKeyButton").addEventListener("click", () => {
-            const keyForm = document.getElementById("keyForm");
-            const editForm = document.getElementById("editForm");
-            keyForm.classList.toggle("hidden");
-            editForm.classList.add("hidden");
+            document.getElementById("keyForm").classList.toggle("hidden");
+            document.getElementById("editForm").classList.add("hidden");
         });
 
-        // Handle key generation
         document.getElementById("submitKey").addEventListener("click", async () => {
-            const expirationDays = document.getElementById("expirationDays").value;
-            const expirationDate = document.getElementById("expirationDate").value;
-            let expiration;
-
-            if (expirationDate) {
-                expiration = getExpirationDate(null, expirationDate);
-            } else if (expirationDays && !isNaN(expirationDays) && expirationDays > 0) {
-                expiration = getExpirationDate(expirationDays);
-            } else {
-                alert("Please enter a valid expiration (days or specific date).");
+            const days = document.getElementById("expirationDays").value;
+            const date = document.getElementById("expirationDate").value;
+            
+            if (!days && !date) {
+                showError("Please enter either days or specific date");
                 return;
             }
-
-            const key = generateKey();
-            await saveKey({ keyValue: key, expiration, days: expirationDays || null });
+            
+            await saveKey({
+                keyValue: generateKey(),
+                expiration: getExpirationDate(days, date),
+                days: days || null
+            });
+            
             document.getElementById("expirationDays").value = "";
             document.getElementById("expirationDate").value = "";
             document.getElementById("keyForm").classList.add("hidden");
         });
 
-        // Handle key editing
         document.getElementById("submitEdit").addEventListener("click", async () => {
-            const expirationDays = document.getElementById("editExpirationDays").value;
-            const expirationDate = document.getElementById("editExpirationDate").value;
-            let expiration;
-
-            if (expirationDate) {
-                expiration = getExpirationDate(null, expirationDate);
-            } else if (expirationDays && !isNaN(expirationDays) && expirationDays > 0) {
-                expiration = getExpirationDate(expirationDays);
-            } else {
-                alert("Please enter a valid expiration (days or specific date).");
+            const days = document.getElementById("editExpirationDays").value;
+            const date = document.getElementById("editExpirationDate").value;
+            
+            if (!days && !date) {
+                showError("Please enter either days or specific date");
                 return;
             }
-
-            await updateKey(editingIndex, { keyValue: keys[editingIndex].keyValue, expiration, days: expirationDays || null });
-            document.getElementById("editExpirationDays").value = "";
-            document.getElementById("editExpirationDate").value = "";
+            
+            await updateKey(editingIndex, {
+                keyValue: keys[editingIndex].keyValue,
+                expiration: getExpirationDate(days, date),
+                days: days || null
+            });
+            
             document.getElementById("editForm").classList.add("hidden");
             editingIndex = null;
         });
 
-        // Cancel editing
         document.getElementById("cancelEdit").addEventListener("click", () => {
-            document.getElementById("editExpirationDays").value = "";
-            document.getElementById("editExpirationDate").value = "";
             document.getElementById("editForm").classList.add("hidden");
             editingIndex = null;
         });
 
-        // Handle raw section visibility and key copying
-        document.getElementById("rawLink").addEventListener("click", async () => {
-            document.getElementById("mainHeader").style.display = "none";
-            document.getElementById("mainContent").style.display = "none";
-            document.getElementById("mainFooter").style.display = "none";
-            document.getElementById("raw").style.display = "block";
-
-            // Load keys and copy the first key to clipboard (or modify to copy a specific key)
-            await loadKeys();
-            if (keys.length > 0) {
-                const keyToCopy = keys[0].keyValue; // Copy the first key as an example
-                navigator.clipboard.writeText(keyToCopy).then(() => {
-                    alert("API Key copied to clipboard: " + keyToCopy);
-                }).catch(err => {
-                    console.error("Failed to copy key: ", err);
-                });
+        // ======================
+        // PASSWORD HANDLING
+        // ======================
+        async function handlePasswordSubmit() {
+            const password = document.getElementById("passwordInput").value;
+            
+            if (password === ADMIN_PASSWORD) {
+                document.getElementById("errorMessage").style.display = "none";
+                document.getElementById("home").classList.add("hidden");
+                document.getElementById("keyGenerator").classList.remove("hidden");
+                document.getElementById("createKeyButton").classList.remove("hidden");
+                document.getElementById("rawLink").classList.remove("hidden");
+                await loadKeys();
             } else {
-                alert("No keys available to copy.");
+                showError("Incorrect password. Please try again.");
             }
-        });
+        }
 
         // Initial load
-        loadKeys();
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.location.host !== 'localhost:3000') {
+                document.getElementById("rawLink").remove();
+            }
+        });
     </script>
 </body>
 </html>
